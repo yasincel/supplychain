@@ -1,0 +1,44 @@
+pragma solidity ^0.8.0;
+
+contract IFCMaterialPassport {
+    struct MaterialPassport {
+        address owner;
+        string manufacturer;
+        string productName;
+        string productIdentifier;
+        string productionDate;
+        string expirationDate;
+    }
+    
+    mapping(bytes32 => MaterialPassport) public materialPassports;
+    mapping(bytes32 => bytes) public ifcFiles;
+    mapping(bytes32 => address) public materialPassportOwners;
+    event Transfer(address indexed from, address indexed to, bytes32 indexed materialPassportId);
+    
+    function addMaterialPassport(bytes32 _materialPassportId, string memory _manufacturer, string memory _productName, string memory _productIdentifier, string memory _productionDate, string memory _expirationDate) public {
+        require(materialPassports[_materialPassportId].owner == address(0), "Material passport already exists");
+        materialPassports[_materialPassportId] = MaterialPassport(msg.sender, _manufacturer, _productName, _productIdentifier, _productionDate, _expirationDate);
+        materialPassportOwners[_materialPassportId] = msg.sender;
+    }
+    
+    function addIfcFile(bytes32 _ifcId, bytes memory _ifcFile) public {
+        ifcFiles[_ifcId] = _ifcFile;
+    }
+    
+    function updateMaterialPassport(bytes32 _materialPassportId, string memory _manufacturer, string memory _productName, string memory _productIdentifier, string memory _productionDate, string memory _expirationDate) public {
+        require(materialPassports[_materialPassportId].owner == msg.sender, "You are not the owner of this material passport");
+        materialPassports[_materialPassportId].manufacturer = _manufacturer;
+        materialPassports[_materialPassportId].productName = _productName;
+        materialPassports[_materialPassportId].productIdentifier = _productIdentifier;
+        materialPassports[_materialPassportId].productionDate = _productionDate;
+        materialPassports[_materialPassportId].expirationDate = _expirationDate;
+    }
+    
+    function transferMaterialPassport(bytes32 _materialPassportId, address _to) public {
+        require(materialPassports[_materialPassportId].owner == msg.sender, "You are not the owner of this material passport");
+        require(_to != address(0), "Invalid address");
+        materialPassports[_materialPassportId].owner = _to;
+        materialPassportOwners[_materialPassportId] = _to;
+        emit Transfer(msg.sender, _to, _materialPassportId);
+    }
+}
